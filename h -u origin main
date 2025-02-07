@@ -1,0 +1,8 @@
+user.email=你的邮箱
+user.name=你的名字
+http.proxy=http://127.0.0.1:7890
+https.proxy=http://127.0.0.1:7890
+core.repositoryformatversion=0
+core.filemode=true
+core.bare=false
+core.logallrefupdates=true
