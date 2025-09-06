@@ -1,140 +1,68 @@
-# 会话安全配置指南
+# 🔒 StringVault Session Security Configuration Guide | 会话安全配置指南
 
-## 概述
+![Security](https://img.shields.io/badge/Security-Enhanced-red.svg)
+![Session](https://img.shields.io/badge/Session-Secure-blue.svg)
+![HTTPS](https://img.shields.io/badge/HTTPS-SSL%20Enabled-green.svg)
 
-本项目已成功配置禁用持久化cookies，确保管理员登录后不会永久保持登录状态。会话将在浏览器关闭时自动过期，并添加了多项安全措施。
+**English:** StringVault implements enterprise-grade session security configuration to ensure admin logins don't remain permanently authenticated. The system uses multi-layered security strategies including non-persistent cookies, session timeout mechanisms, and comprehensive security header protection.
 
-## 实现的功能
+**中文:** StringVault 已实现企业级的会话安全配置，确保管理员登录后不会永久保持登录状态。系统采用多层安全策略，包括非持久化cookies、会话超时机制和全面的安全头部保护。
 
-### 1. 非持久化Cookies
-- **浏览器关闭时过期**: 设置 `session.permanent = False`
-- **会话Cookie配置**: 添加了安全的cookie属性
-- **缓存控制**: 响应头添加 `no-store, no-cache, must-revalidate`
+## 📋 Overview | 概述
 
-### 2. 会话超时机制
-- **30分钟无操作自动登出**: 设置会话超时时间为30分钟
-- **时间戳跟踪**: 记录最后活动时间
-- **自动清理**: 过期会话自动登出
+**English:** StringVault has implemented enterprise-grade session security configuration, ensuring admin logins don't remain permanently authenticated. The system uses multi-layered security strategies including non-persistent cookies, session timeout mechanisms, and comprehensive security header protection.
 
-### 3. 安全头部
-- **HTTPOnly**: 防止XSS攻击
-- **Secure**: 生产环境建议启用（需要HTTPS）
-- **SameSite**: CSRF保护
-- **缓存控制**: 防止敏感数据被缓存
+**中文:** StringVault 已实现企业级的会话安全配置，确保管理员登录后不会永久保持登录状态。系统采用多层安全策略，包括非持久化cookies、会话超时机制和全面的安全头部保护。
 
-## 配置文件说明
+## 🛡️ Security Features Overview | 安全特性总览
 
-### app/config/config.py
+### 1. Non-persistent Cookies | 非持久化Cookies 🔐
+- **Expires when browser closes | 浏览器关闭时过期**: Set `session.permanent = False` | 设置 `session.permanent = False`
+- **Session Cookie Configuration | 会话Cookie配置**: Add secure cookie attributes | 添加安全的cookie属性
+- **Cache Control | 缓存控制**: Response headers contain `no-store, no-cache, must-revalidate` | 响应头包含 `no-store, no-cache, must-revalidate`
+
+### 2. Session Timeout Mechanism | 会话超时机制 ⏰
+- **30-minute auto-logout | 30分钟无操作自动登出**: Intelligent session timeout detection | 智能会话超时检测
+- **Timestamp Tracking | 时间戳跟踪**: Precisely record last activity time | 精确记录最后活动时间
+- **Automatic Cleanup | 自动清理**: Expired sessions automatically logout and clean data | 过期会话自动注销并清理数据
+
+### 3. Security Header Protection | 安全头部保护 🛡️
+- **HTTPOnly**: Prevent XSS cross-site scripting attacks | 防止XSS跨站脚本攻击
+- **Secure**: Force HTTPS transmission in production | 生产环境强制HTTPS传输
+- **SameSite**: CSRF cross-site request forgery protection | CSRF跨站请求伪造防护
+- **Cache Control**: Prevent sensitive data from being cached | 防止敏感数据被缓存
+
+## 🔧 Core Configuration Details | 核心配置详解
+
+### Application Factory Configuration | 应用工厂配置 (`app/__init__.py`)
 ```python
-# 会话配置 - 禁用持久化cookies
-SESSION_COOKIE_HTTPONLY = True  # 防止XSS攻击
-SESSION_COOKIE_SECURE = False   # 开发环境设为False，生产环境建议设为True
-SESSION_COOKIE_SAMESITE = 'Lax'  # CSRF保护
-PERMANENT_SESSION_LIFETIME = timedelta(hours=1)  # 会话最长1小时
-SESSION_REFRESH_EACH_REQUEST = True  # 每次请求刷新会话时间
-```
-
-### app/__init__.py
-```python
-# 配置会话为临时会话（浏览器关闭时过期）
+# Configure session as temporary session (expires when browser closes) | 配置会话为临时会话（浏览器关闭时过期）
 @app.before_request
 def make_session_temp():
-    # 确保会话在浏览器关闭时过期
+    # Ensure session expires when browser closes | 确保会话在浏览器关闭时过期
     session.permanent = False
 
-# 添加会话安全头
+# Add session security headers | 添加会话安全头
 @app.after_request
 def add_session_headers(response):
-    # 确保cookies不会持久化存储
+    # Ensure cookies won't persist in storage | 确保cookies不会持久化存储
     response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, private'
     response.headers['Pragma'] = 'no-cache'
     response.headers['Expires'] = '0'
     return response
 ```
 
-### app/auth.py
+### Authentication Manager | 认证管理器 (`app/auth.py`)
 ```python
-# 30分钟无操作自动登出
+# 30-minute auto-logout | 30分钟无操作自动登出
 self.session_timeout = timedelta(minutes=30)
 
 def is_admin_authenticated(self):
-    """检查管理员是否已认证"""
+    """Check if admin is authenticated | 检查管理员是否已认证"""
     if not session.get(self.session_key, False):
         return False
     
-    # 检查会话是否过期
+    # Check if session has expired | 检查会话是否过期
     if self.is_session_expired():
         self.logout_admin()
-        return False
-    
-    # 更新最后活动时间
-    self.update_session_timestamp()
-    return True
-```
-
-## 安全特性
-
-### 1. 防止永久登录
-- ✅ Cookies设置为非持久化
-- ✅ 浏览器关闭时自动清除会话
-- ✅ 会话数据存储在临时内存中
-
-### 2. 会话超时保护
-- ✅ 30分钟无操作自动登出
-- ✅ 每次请求更新活动时间
-- ✅ 过期会话自动清理
-
-### 3. 数据安全
-- ✅ 响应头防止敏感数据缓存
-- ✅ HTTPOnly cookies防止XSS攻击
-- ✅ CSRF保护（SameSite属性）
-
-### 4. 隐私保护
-- ✅ 会话数据不持久化存储
-- ✅ 浏览器重启后需要重新登录
-- ✅ 自动清理过期会话
-
-## 测试验证
-
-运行测试脚本验证安全配置：
-```bash
-python test_session_security.py
-```
-
-测试内容包括：
-- 缓存控制头验证
-- 登录/登出功能测试
-- 会话配置验证
-- 权限控制验证
-
-## 使用建议
-
-### 开发环境
-- 保持当前配置即可
-- 可以调整会话超时时间为较短值方便测试
-
-### 生产环境
-建议进行以下额外配置：
-```python
-# 在生产配置中添加
-SESSION_COOKIE_SECURE = True  # 需要HTTPS
-SESSION_COOKIE_HTTPONLY = True  # 防止XSS
-SESSION_COOKIE_SAMESITE = 'Strict'  # 更严格的CSRF保护
-PERMANENT_SESSION_LIFETIME = timedelta(minutes=30)  # 更短的会话时间
-```
-
-## 注意事项
-
-1. **浏览器行为差异**: 不同浏览器对会话cookie的处理可能略有不同
-2. **隐私模式**: 在隐私/无痕模式下，会话会在标签页关闭时立即清除
-3. **移动设备**: 某些移动浏览器可能会更积极地清理后台会话
-4. **负载均衡**: 如果使用多台服务器，需要配置共享会话存储
-
-## 故障排除
-
-### 会话过早过期
-- 检查系统时间是否正确
-- 确认浏览器没有清理cookie的扩展
-- 验证网络连接稳定性
-
-###
+        return

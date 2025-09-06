@@ -1,148 +1,100 @@
-# 字符串托管系统 - 部署指南
+# 🚀 StringVault Production Environment Deployment Guide | 生产环境部署指南
 
-## 🔐 安全特性
+![Deployment](https://img.shields.io/badge/Deployment-Production-red.svg)
+![Docker](https://img.shields.io/badge/Docker-Supported-blue.svg)
+![Nginx](https://img.shields.io/badge/Nginx-Reverse%20Proxy-green.svg)
+![HTTPS](https://img.shields.io/badge/HTTPS-SSL%20Enabled-yellow.svg)
 
-✅ **管理员认证系统** - 只有管理员可以添加/删除字符串
-✅ **会话管理** - 安全的会话认证
-✅ **密码哈希** - 使用SHA256加密存储密码
-✅ **访问控制** - 普通用户只能查看和复制字符串
+**English:** Comprehensive guide for deploying StringVault in production environments with enterprise-grade security, performance optimization, and monitoring.
 
-## 🚀 快速部署
+**中文:** 完整的StringVault生产环境部署指南，包含企业级安全、性能优化和监控配置。
 
-### 1. 设置管理员密码
+## 🔐 Security Features Overview | 安全特性总览
 
+✅ **Admin Authentication System | 管理员认证系统** - Multi-user authentication based on SHA256 hashing | 基于SHA256哈希的多用户认证  
+✅ **Session Security Management | 会话安全管理** - Non-persistent cookies, 30-minute auto-logout | 非持久化cookies，30分钟自动登出  
+✅ **Password Encrypted Storage | 密码加密存储** - Admin passwords encrypted using SHA256 | 使用SHA256加密存储管理员密码  
+✅ **Access Permission Control | 访问权限控制** - Regular users can only view and copy strings | 普通用户只能查看和复制字符串  
+✅ **HTTPS Support | HTTPS支持** - SSL encryption can be enabled in production | 生产环境可启用SSL加密传输  
+✅ **Data Backup Mechanism | 数据备份机制** - Automatic backup function prevents data loss | 自动备份功能，防止数据丢失  
+
+## 🎯 Pre-deployment Preparation | 部署前准备
+
+### System Requirements | 系统要求
+- **Operating System | 操作系统**: Linux (Ubuntu 20.04+ / CentOS 8+)
+- **Python Version | Python版本**: 3.7+
+- **Memory Requirements | 内存要求**: Minimum 512MB, Recommended 1GB+ | 最低512MB，推荐1GB+
+- **Storage Space | 存储空间**: Minimum 1GB available space | 最低1GB可用空间
+- **Network | 网络**: Public IP and domain name (for HTTPS) | 公网IP和域名（用于HTTPS）
+
+### Required Software | 必备软件
 ```bash
-# 运行密码设置工具
-python set_admin_password.py
+# Update system packages | 更新系统包
+sudo apt update && sudo apt upgrade -y
 
-# 或者手动设置环境变量
-export ADMIN_PASSWORD_HASH='your_password_hash_here'
+# Install basic tools | 安装基础工具
+sudo apt install -y git curl wget vim nginx python3-pip python3-venv
+
+# Install production server | 安装生产服务器
+sudo apt install -y gunicorn3
 ```
 
-### 2. 生产环境配置
+## 🚀 Quick Deployment Solutions | 快速部署方案
 
+### Solution 1: Traditional Deployment (Recommended) | 方案一：传统部署（推荐）
+
+#### 1. Project Deployment | 项目部署
 ```bash
-# 设置生产环境
-export FLASK_CONFIG=production
+# Create project directory | 创建项目目录
+sudo mkdir -p /opt/stringvault
+cd /opt/stringvault
 
-# 设置安全的密钥
-export SECRET_KEY='your_very_secret_key_here'
+# Clone project | 克隆项目
+sudo git clone https://github.com/Abelliuxl/StringVault.git .
+sudo chown -R $USER:$USER /opt/stringvault
 
-# 设置管理员密码哈希
-export ADMIN_PASSWORD_HASH='ef92b778bafe771e89245b89ecbc08a4426a7280c6db9a51c9e0d7e327b0a6c8'
+# Create virtual environment | 创建虚拟环境
+python3 -m venv venv
+source venv/bin/activate
+
+# Install dependencies | 安装依赖
+pip install -r requirements.txt
 ```
 
-### 3. 使用生产服务器
-
+#### 2. Production Environment Configuration | 生产环境配置
 ```bash
-# 安装gunicorn
-pip install gunicorn
+# Create production environment config file | 创建生产环境配置文件
+cat > /opt/stringvault/production_config.py << 'EOF'
+import os
+from datetime import timedelta
 
-# 启动生产服务器
-gunicorn -w 4 -b 0.0.0.0:5000 run:app
-```
-
-## 🔧 默认管理员密码
-
-**默认密码**: `admin123`
-
-⚠️ **重要**: 部署到公网后务必更改默认密码！
-
-## 🌐 公网部署建议
-
-### 1. 使用 Nginx 反向代理
-
-```nginx
-server {
-    listen 80;
-    server_name your-domain.com;
+class ProductionConfig:
+    SECRET_KEY = os.environ.get('SECRET_KEY') or 'your-very-secret-key-here'
+    FLASK_CONFIG = 'production'
     
-    location / {
-        proxy_pass http://127.0.0.1:5000;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-    }
-}
+    # Session configuration | 会话配置
+    SESSION_COOKIE_HTTPONLY = True
+    SESSION_COOKIE_SECURE = True  # Requires HTTPS | 需要HTTPS
+    SESSION_COOKIE_SAMESITE = 'Strict'
+    PERMANENT_SESSION_LIFETIME = timedelta(minutes=30)
+    
+    # Security headers | 安全头部
+    SEND_FILE_MAX_AGE_DEFAULT = 0
+    
+    # Backup configuration | 备份配置
+    BACKUP_DIR = 'backups'
+    MAX_BACKUPS = 50
+EOF
 ```
 
-### 2. 使用 HTTPS
-
+#### 3. Environment Variables Setup | 环境变量设置
 ```bash
-# 安装certbot
-sudo apt install certbot python3-certbot-nginx
+# Create environment variables file | 创建环境变量文件
+cat > /opt/stringvault/.env << 'EOF'
+# Flask configuration | Flask配置
+export FLASK_CONFIG=production
+export SECRET_KEY='your-very-secret-key-here-change-this'
 
-# 获取SSL证书
-sudo certbot --nginx -d your-domain.com
-```
-
-### 3. 防火墙配置
-
-```bash
-# 允许HTTP和HTTPS
-sudo ufw allow 80/tcp
-sudo ufw allow 443/tcp
-
-# 启用防火墙
-sudo ufw enable
-```
-
-## 📁 文件结构
-
-```
-StringVault/
-├── app/
-│   ├── __init__.py          # 应用初始化
-│   ├── auth.py              # 认证管理
-│   ├── models.py            # 数据模型
-│   ├── views.py             # 视图路由
-│   ├── config/              # 配置文件
-│   ├── static/              # 静态文件
-│   └── templates/           # HTML模板
-├── data.json                # 数据文件
-├── run.py                   # 启动文件
-├── requirements.txt         # 依赖包
-└── set_admin_password.py   # 密码设置工具
-```
-
-## 🔍 功能说明
-
-### 管理员功能
-- ✅ 添加新字符串
-- ✅ 删除现有字符串
-- ✅ 管理会话（登录/登出）
-
-### 普通用户功能
-- ✅ 查看所有字符串
-- ✅ 搜索字符串
-- ✅ 复制字符串到剪贴板
-- ✅ 展开/收起长字符串内容
-
-## 🛡️ 安全建议
-
-1. **立即更改默认密码**
-2. **使用强密码**（12位以上，包含大小写字母、数字和特殊字符）
-3. **定期更换密码**
-4. **使用HTTPS加密传输**
-5. **限制服务器访问IP**（如可能）
-6. **定期备份数据文件**（data.json）
-
-## 📞 技术支持
-
-如果遇到问题，请检查：
-1. 管理员密码是否正确设置
-2. 环境变量是否配置正确
-3. 文件权限是否正确
-4. 端口是否被防火墙阻止
-
-## ⚡ 性能优化
-
-- 使用生产服务器（gunicorn/uwsgi）
-- 启用Nginx缓存
-- 定期清理旧数据
-- 监控服务器资源使用情况
-
----
-
-**现在您的字符串托管系统已经安全部署！只有管理员可以添加/删除字符串，其他用户只能查看和复制。**
+# Application configuration | 应用配置
+export FLASK_APP=run.py
+export PYTHONPATH=/
