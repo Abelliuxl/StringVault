@@ -22,4 +22,8 @@ var/
 .venv
 venv/
 ENV/
-backups/ 
+backups/
+# 管理员密码文件 - 包含敏感信息
+admin_passwords.json
+# 环境变量文件
+.env
