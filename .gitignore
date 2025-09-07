@@ -25,5 +25,7 @@ ENV/
 backups/
 # 管理员密码文件 - 包含敏感信息
 admin_passwords.json
+# 数据文件 - 包含用户数据
+data.json
 # 环境变量文件
 .env
