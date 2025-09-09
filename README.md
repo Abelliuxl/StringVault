@@ -90,6 +90,15 @@ cd tests
 python test_session_security.py
 ```
 
+### Supervisor Management | Supervisor管理
+```bash
+# Start/stop/restart StringVault service | 启动/停止/重启StringVault服务
+./supervisor_manage.sh start|stop|restart
+
+# Check StringVault service status | 检查StringVault服务状态
+./supervisor_manage.sh status
+```
+
 ## 📁 Project Structure | 项目结构
 
 ```
@@ -109,7 +118,7 @@ StringVault/
 ├── admin_password_tool.py       # Password management tool | 密码管理工具
 ├── run.py                       # Application startup file | 应用启动文件
 ├── requirements.txt             # Project dependencies | 项目依赖
-├── data.json                    # Data storage file | 数据存储文件
+├── data.json.template           # Data storage file template | 数据存储文件模板
 └── README.md                    # Project documentation | 项目说明
 ```
 
