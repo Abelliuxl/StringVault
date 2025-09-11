@@ -240,6 +240,34 @@ h1 {
     background: var(--primary-color);
 }
 
+.string-value {
+    position: relative; /* 为伪元素定位 */
+}
+
+.string-value.frosted-glass::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(255, 255, 255, 0.1); /* 半透明背景 */
+    backdrop-filter: blur(8px); /* 磨砂玻璃效果 */
+    -webkit-backdrop-filter: blur(8px); /* Safari兼容 */
+    z-index: 1; /* 确保在文本上方 */
+    transition: opacity 0.3s ease;
+}
+
+.string-value.frosted-glass.frosted-glass-active::before {
+    opacity: 1; /* 激活时显示磨砂玻璃 */
+    pointer-events: auto; /* 允许点击穿透 */
+}
+
+.string-value.frosted-glass::before {
+    opacity: 0; /* 默认隐藏 */
+    pointer-events: none; /* 默认不允许点击穿透 */
+}
+
 .string-value.truncate {
     display: -webkit-box;
     -webkit-line-clamp: 3;

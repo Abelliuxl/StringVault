@@ -123,8 +123,8 @@ document.addEventListener('DOMContentLoaded', function() {
             classList: previewButton.classList.toString()
         });
         
-        // 添加truncate类
-        valueElement.classList.add('truncate');
+        // 添加truncate类和frosted-glass类，并默认激活磨砂玻璃效果
+        valueElement.classList.add('truncate', 'frosted-glass', 'frosted-glass-active');
         
         // 检查按钮当前状态
         const buttonIcon = previewButton.querySelector('span:first-child');
@@ -185,10 +185,8 @@ document.addEventListener('DOMContentLoaded', function() {
         // 确保按钮有正确的初始样式（移除expanded类）
         previewButton.classList.remove('expanded');
         
-        // 如果内容不需要截断（内容高度小于等于3行），隐藏展开按钮
-        if (valueElement.scrollHeight <= valueElement.clientHeight) {
-            previewButton.style.display = 'none';
-        }
+        // 无论内容长度如何，展开按钮都始终显示
+        previewButton.style.display = 'inline-flex'; // 确保按钮可见
     });
 
     // 展开/收起按钮事件监听 - 简化版本用于测试
@@ -204,19 +202,21 @@ document.addEventListener('DOMContentLoaded', function() {
             const stringItem = this.closest('.string-item');
             const valueElement = stringItem.querySelector('.string-value');
             
-            // 简单切换逻辑
+            // 切换逻辑
             if (valueElement.classList.contains('truncate')) {
                 // 展开
                 valueElement.classList.remove('truncate');
+                valueElement.classList.remove('frosted-glass-active'); // 移除磨砂玻璃效果
                 this.innerHTML = '<span>👁️‍🗨️</span><span>收起</span>';
-                this.classList.add('expanded');
+                this.classList.add('expanded'); // 保持expanded类用于按钮样式
                 this.setAttribute('title', '收起完整内容');
                 console.log('✅ 已展开');
             } else {
                 // 收起
                 valueElement.classList.add('truncate');
+                valueElement.classList.add('frosted-glass-active'); // 恢复磨砂玻璃效果
                 this.innerHTML = '<span>👁️</span><span>展开</span>';
-                this.classList.remove('expanded');
+                this.classList.remove('expanded'); // 移除expanded类用于按钮样式
                 this.setAttribute('title', '展开完整内容');
                 console.log('✅ 已收起');
             }
