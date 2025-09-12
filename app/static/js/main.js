@@ -70,13 +70,102 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // 删除确认
+    // 通用密码验证表单提交
+    const passwordVerifyForm = document.getElementById('passwordVerifyForm');
+    if (passwordVerifyForm) {
+        passwordVerifyForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const passwordInput = this.querySelector('input[name="password"]');
+            const password = passwordInput.value.trim();
+            
+            if (!password) {
+                showNotification('请输入管理员密码', 'error');
+                return;
+            }
+            
+            const submitBtn = this.querySelector('.login-btn');
+            const originalText = submitBtn.textContent;
+            submitBtn.textContent = '验证中...';
+            submitBtn.disabled = true;
+            
+            fetch('/api/verify_password', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify({ password: password })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showNotification('密码验证成功！', 'success');
+                    closePasswordVerifyModal();
+                    if (currentVerifyCallback) {
+                        currentVerifyCallback(); // 执行验证成功后的回调
+                        currentVerifyCallback = null; // 清除回调
+                    }
+                } else {
+                    showNotification(data.error || '密码错误', 'error');
+                    submitBtn.textContent = originalText;
+                    submitBtn.disabled = false;
+                    passwordInput.value = '';
+                    passwordInput.focus();
+                }
+            })
+            .catch(error => {
+                console.error('密码验证请求失败:', error);
+                showNotification('密码验证请求失败，请重试', 'error');
+                submitBtn.textContent = originalText;
+                submitBtn.disabled = false;
+            });
+        });
+    }
+
+    // 添加字符串按钮点击事件
+    const addStringBtn = document.getElementById('addStringBtn');
+    const addForm = document.getElementById('add-form');
+    if (addStringBtn && addForm) {
+        addStringBtn.addEventListener('click', function() {
+            // 验证输入
+            const keyInput = addForm.querySelector('input[name="key"]');
+            const valueInput = addForm.querySelector('input[name="value"]');
+            
+            if (!validateInput(keyInput, 100)) {
+                showNotification('键名不能为空且长度不能超过100个字符', 'error');
+                return;
+            }
+            
+            if (!validateInput(valueInput, 10000)) {
+                showNotification('值不能为空且长度不能超过10000个字符', 'error');
+                return;
+            }
+
+            showPasswordVerifyModal(function() {
+                addForm.submit(); // 验证成功后提交表单
+            });
+        });
+    }
+
+    // 删除按钮点击事件
     const deleteButtons = document.querySelectorAll('.delete-btn');
     deleteButtons.forEach(button => {
         button.addEventListener('click', function(e) {
+            e.preventDefault(); // 阻止默认的表单提交
+            const keyToDelete = this.dataset.key; // 获取要删除的键
+
             if (!confirm('确定要删除这个字符串吗？')) {
-                e.preventDefault();
+                return; // 用户取消删除
             }
+
+            showPasswordVerifyModal(function() {
+                // 验证成功后，手动提交删除表单
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = `/delete/${keyToDelete}`;
+                document.body.appendChild(form);
+                form.submit();
+            });
         });
     });
 
@@ -90,25 +179,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 const searchForm = document.querySelector('#search-form');
                 searchForm.submit();
             }, 500);
-        });
-    }
-
-    // 表单验证
-    const addForm = document.querySelector('#add-form');
-    if (addForm) {
-        addForm.addEventListener('submit', function(e) {
-            const keyInput = this.querySelector('input[name="key"]');
-            const valueInput = this.querySelector('input[name="value"]');
-            
-            if (!validateInput(keyInput, 100)) {
-                e.preventDefault();
-                showNotification('键名不能为空且长度不能超过100个字符', 'error');
-            }
-            
-            if (!validateInput(valueInput, 10000)) {
-                e.preventDefault();
-                showNotification('值不能为空且长度不能超过10000个字符', 'error');
-            }
         });
     }
 
@@ -272,6 +342,37 @@ function showNotification(message, type = 'info') {
                 clearTimeout(hideTimer);
                 notification.classList.add('removing');
             });
+        }
+    }
+}
+
+// 关闭通用密码验证弹窗
+function closePasswordVerifyModal() {
+    const modal = document.getElementById('passwordVerifyModal');
+    if (modal) {
+        modal.classList.remove('show');
+        const passwordInput = modal.querySelector('input[name="password"]');
+        if (passwordInput) {
+            passwordInput.value = '';
+        }
+        const submitBtn = modal.querySelector('.login-btn');
+        if (submitBtn) {
+            submitBtn.textContent = '验证';
+            submitBtn.disabled = false;
+        }
+    }
+}
+
+// 显示通用密码验证弹窗
+let currentVerifyCallback = null; // 用于存储验证成功后的回调函数
+function showPasswordVerifyModal(callback) {
+    const modal = document.getElementById('passwordVerifyModal');
+    if (modal) {
+        modal.classList.add('show');
+        currentVerifyCallback = callback; // 保存回调函数
+        const passwordInput = modal.querySelector('input[name="password"]');
+        if (passwordInput) {
+            setTimeout(() => passwordInput.focus(), 100);
         }
     }
 }

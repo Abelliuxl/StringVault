@@ -13,8 +13,199 @@
     <meta name="theme-color" content="#6366f1">
     
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <style>
+        /* 登录弹窗样式 */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        
+        .modal-overlay.show {
+            display: flex;
+        }
+        
+        .login-modal {
+            background: white;
+            border-radius: 10px;
+            padding: 2rem;
+            width: 90%;
+            max-width: 400px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            position: relative;
+            animation: modalSlideIn 0.3s ease-out;
+        }
+        
+        @keyframes modalSlideIn {
+            from {
+                transform: translateY(-50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+        
+        .modal-header {
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+        
+        .modal-header h2 {
+            color: #333;
+            margin: 0 0 0.5rem 0;
+            font-size: 1.5rem;
+        }
+        
+        .modal-header p {
+            color: #666;
+            margin: 0;
+            font-size: 0.9rem;
+        }
+        
+        .close-modal {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #999;
+            padding: 0.25rem;
+            line-height: 1;
+        }
+        
+        .close-modal:hover {
+            color: #333;
+        }
+        
+        .login-form {
+            margin-bottom: 1rem;
+        }
+        
+        .login-form .form-group {
+            margin-bottom: 1rem;
+        }
+        
+        .login-form .form-control {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid #e1e5e9;
+            border-radius: 5px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+        
+        .login-form .form-control:focus {
+            outline: none;
+            border-color: #6366f1;
+        }
+        
+        .login-btn {
+            width: 100%;
+            padding: 0.75rem;
+            background: #6366f1;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        
+        .login-btn:hover {
+            background: #5558e3;
+        }
+        
+        /* 管理员按钮样式 */
+        .header-section {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #e1e5e9;
+        }
+        
+        .admin-section {
+            display: flex;
+            gap: 1rem;
+        }
+        
+        .btn-admin, .btn-logout {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 5px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            color: white;
+            font-weight: 500;
+        }
+        
+        .btn-admin {
+            background: #6366f1;
+        }
+        
+        .btn-admin:hover {
+            background: #5558e3;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+        }
+        
+        .btn-logout {
+            background: #ef4444;
+        }
+        
+        .btn-logout:hover {
+            background: #dc2626;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+        }
+        
+        .btn-admin span, .btn-logout span {
+            font-size: 1rem;
+        }
+    </style>
 </head>
 <body>
+    <!-- 通用密码验证弹窗 -->
+    <div id="passwordVerifyModal" class="modal-overlay">
+        <div class="login-modal">
+            <button class="close-modal" onclick="closePasswordVerifyModal()">&times;</button>
+            <div class="modal-header">
+                <h2>🔐 权限验证</h2>
+                <p>请输入管理员密码以执行此操作</p>
+            </div>
+            <form id="passwordVerifyForm" class="login-form">
+                <div class="form-group">
+                    <input type="password" 
+                           name="password" 
+                           class="form-control" 
+                           placeholder="管理员密码"
+                           required
+                           autofocus>
+                </div>
+                <button type="submit" class="login-btn">
+                    验证
+                </button>
+            </form>
+        </div>
+    </div>
+    
     <!-- 闪现消息 -->
     <div class="flash-messages">
         {% with messages = get_flashed_messages(with_categories=true) %}
@@ -33,7 +224,11 @@
     </div>
     
     <div class="container">
-        <h1>字符串托管系统</h1>
+        <div class="header-section">
+            <h1>字符串托管系统</h1>
+            
+            <!-- 移除管理员登录/登出按钮 -->
+        </div>
         
         <!-- 搜索框 -->
         <div class="search-box">
@@ -68,7 +263,7 @@
                        maxlength="10000"
                        required>
             </div>
-            <button type="submit" class="btn btn-primary">
+            <button type="button" class="btn btn-primary" id="addStringBtn">
                 <span>➕</span>
                 添加字符串
             </button>
@@ -97,12 +292,10 @@
                         <span>👁️</span>
                         展开
                     </button>
-                    <form method="post" action="{{ url_for('main.delete_string', key=item.key) }}" style="display: inline;">
-                        <button type="submit" class="btn btn-danger delete-btn">
-                            <span>🗑️</span>
-                            删除
-                        </button>
-                    </form>
+                    <button type="button" class="btn btn-danger delete-btn" data-key="{{ item.key }}">
+                        <span>🗑️</span>
+                        删除
+                    </button>
                 </div>
             </div>
             {% else %}

@@ -5,15 +5,15 @@
 ![License](https://img.shields.io/badge/License-MIT-yellow.svg)
 ![Security](https://img.shields.io/badge/Security-Enhanced-red.svg)
 
-**English:** StringVault is a Flask-based secure web application designed for safe storage and management of string data, featuring a complete admin authentication system and session security protection.
+**English:** StringVault is a Flask-based secure web application designed for safe storage and management of string data, featuring on-demand admin password verification for sensitive operations.
 
-**中文:** StringVault 是一个基于 Flask 的安全 Web 应用程序，专为安全存储和管理字符串数据而设计。具备完整的管理员认证系统和会话安全保护。
+**中文:** StringVault 是一个基于 Flask 的安全 Web 应用程序，专为安全存储和管理字符串数据而设计。其特点是敏感操作需要按需进行管理员密码验证。
 
 ## ✨ Core Features | 核心功能
 
 ### 🔒 Security Management | 安全管理
-- **Admin Authentication System | 管理员认证系统** - Multi-user authentication based on SHA256 hashing | 基于SHA256哈希的多用户认证
-- **Session Security Protection | 会话安全保护** - Non-persistent cookies, automatic logout after 30 minutes of inactivity | 非持久化cookies，30分钟无操作自动登出
+- **On-demand Admin Verification | 按需管理员验证** - Sensitive operations (add, delete) require real-time password verification | 敏感操作（添加、删除）需要实时密码验证
+- **Admin Password Hashing | 管理员密码哈希** - Multi-user authentication based on SHA256 hashing | 基于SHA256哈希的多用户认证
 - **Access Control | 访问控制** - Regular users can only view, admins can manage data | 普通用户只能查看，管理员可以管理数据
 - **Data Backup | 数据备份** - Automatic backup functionality to prevent data loss | 自动备份功能，防止数据丢失
 
@@ -25,8 +25,6 @@
 
 ### 🛡️ Security Features | 安全特性
 - **Password Hash Storage | 密码哈希存储** - Admin passwords encrypted using SHA256 | 使用SHA256加密存储管理员密码
-- **Session Timeout | 会话超时** - Automatic logout after 30 minutes of inactivity | 30分钟无操作自动登出
-- **Cache Control | 缓存控制** - Prevents sensitive data from being cached | 防止敏感数据被缓存
 - **HTTPS Support | HTTPS支持** - HTTPS encryption can be enabled in production | 生产环境可启用HTTPS加密
 
 ## 🚀 Quick Start | 快速开始
@@ -51,15 +49,12 @@ python run.py
 ### 3. Access the Application | 访问应用
 - Application URL | 应用地址：http://localhost:5000
 - Default admin password | 默认管理员密码：`admin123`
-- Recommended to change default password immediately after first login | 建议首次登录后立即修改默认密码
 
 ## 📖 Usage Guide | 使用指南
 
 ### Admin Operations | 管理员操作
-1. **Login Management | 登录管理** - Login to the system using admin password | 使用管理员密码登录系统
-2. **Add Data | 添加数据** - Click the "Add New String" button | 点击"添加新字符串"按钮
-3. **Delete Data | 删除数据** - Click the delete button on the right side of the string | 点击字符串右侧的删除按钮
-4. **Secure Logout | 安全退出** - Use the "Admin Logout" function | 使用"管理员登出"功能
+1. **Add Data | 添加数据** - Click the "Add New String" button, then enter admin password in the pop-up window to confirm | 点击"添加新字符串"按钮，然后在弹窗中输入管理员密码确认
+2. **Delete Data | 删除数据** - Click the delete button on the right side of the string, confirm deletion, then enter admin password in the pop-up window to confirm | 点击字符串右侧的删除按钮，确认删除，然后在弹窗中输入管理员密码确认
 
 ### Regular Users | 普通用户
 1. **Browse Data | 浏览数据** - View all stored strings | 查看所有存储的字符串
@@ -153,8 +148,6 @@ StringVault/
 
 ### Default Security Settings | 默认安全设置
 - Admin passwords stored using SHA256 hash | 管理员密码使用SHA256哈希存储
-- Sessions expire automatically after 30 minutes of inactivity | 会话30分钟无操作自动过期
-- Login status automatically cleared when browser closes | 浏览器关闭时自动清除登录状态
 - Sensitive data will not be cached | 敏感数据不会被缓存
 
 ### Production Environment Recommendations | 生产环境建议

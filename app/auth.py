@@ -11,8 +11,7 @@ class AuthManager:
         self.passwords_file = passwords_file
         self.password_hashes = self.load_password_hashes()
         self.session_key = 'admin_authenticated'
-        self.session_timestamp_key = 'admin_session_timestamp'
-        self.session_timeout = timedelta(minutes=30)  # 30分钟无操作自动登出
+        # 移除时间戳和超时逻辑，实现一次登录只能用一次会话
     
     def load_password_hashes(self):
         """从JSON文件加载密码哈希列表"""
@@ -59,49 +58,29 @@ class AuthManager:
         password_hash = self.hash_password(password)
         return password_hash in self.password_hashes
     
-    def login_admin(self, password):
-        """管理员登录（仅密码验证）"""
-        if self.verify_password(password):
-            session[self.session_key] = True
-            session[self.session_timestamp_key] = datetime.now().isoformat()
-            session.permanent = False  # 确保会话在浏览器关闭时过期
-            return True
-        return False
+    def verify_admin_password_on_demand(self, password):
+        """按需验证管理员密码"""
+        return self.verify_password(password)
+
+    # 移除登录和登出方法，因为不再维持登录状态
+    # def login_admin(self, password):
+    #     """管理员登录（仅密码验证）"""
+    #     if self.verify_password(password):
+    #         session[self.session_key] = True
+    #         session.permanent = False  # 确保会话在浏览器关闭时过期
+            
+    #         # 立即标记会话为已修改，确保cookie被正确设置
+    #         session.modified = True
+    #         return True
+    #     return False
     
-    def logout_admin(self):
-        """管理员登出"""
-        session.pop(self.session_key, None)
-        session.pop(self.session_timestamp_key, None)
-    
-    def is_session_expired(self):
-        """检查会话是否过期"""
-        timestamp_str = session.get(self.session_timestamp_key)
-        if not timestamp_str:
-            return True
-        
-        try:
-            last_activity = datetime.fromisoformat(timestamp_str)
-            return datetime.now() - last_activity > self.session_timeout
-        except (ValueError, AttributeError):
-            return True
-    
-    def update_session_timestamp(self):
-        """更新会话时间戳"""
-        session[self.session_timestamp_key] = datetime.now().isoformat()
+    # def logout_admin(self):
+    #     """管理员登出"""
+    #     session.pop(self.session_key, None)
     
     def is_admin_authenticated(self):
-        """检查管理员是否已认证"""
-        if not session.get(self.session_key, False):
-            return False
-        
-        # 检查会话是否过期
-        if self.is_session_expired():
-            self.logout_admin()
-            return False
-        
-        # 更新最后活动时间
-        self.update_session_timestamp()
-        return True
+        """检查管理员是否已认证 (始终返回 False，因为不再维持登录状态)"""
+        return False
     
     def add_password(self, password):
         """添加新的管理员密码"""
@@ -145,14 +124,10 @@ class AuthManager:
         return self.password_hashes.copy()
 
     def require_admin(self, f):
-        """管理员认证装饰器"""
+        """管理员认证装饰器 (不再检查会话，因为验证逻辑已转移到前端和按需验证)"""
         @wraps(f)
         def decorated_function(*args, **kwargs):
-            if not self.is_admin_authenticated():
-                if request.is_json:
-                    return {'success': False, 'error': '需要管理员权限'}, 403
-                flash('需要管理员权限', 'error')
-                return redirect(url_for('main.admin_login'))
+            # 暂时不进行任何会话检查，因为验证逻辑将转移到前端和新的后端接口
             return f(*args, **kwargs)
         return decorated_function
 

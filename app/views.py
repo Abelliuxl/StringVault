@@ -27,8 +27,15 @@ def index():
                          search_query=search_query,
                          is_admin=auth_manager.is_admin_authenticated())
 
+@main.route('/api/verify_password', methods=['POST'])
+def api_verify_password():
+    data = request.get_json()
+    password = data.get('password')
+    if auth_manager.verify_admin_password_on_demand(password):
+        return jsonify({'success': True})
+    return jsonify({'success': False, 'error': '密码错误'}), 401
+
 @main.route('/add', methods=['POST'])
-@auth_manager.require_admin
 def add_string():
     key = request.form.get('key', '').strip()
     value = request.form.get('value', '').strip()
@@ -45,7 +52,6 @@ def add_string():
     return redirect(url_for('main.index'))
 
 @main.route('/delete/<key>', methods=['POST'])
-@auth_manager.require_admin
 def delete_string(key):
     if store.delete_string(key):
         flash('字符串删除成功', 'success')
@@ -53,23 +59,7 @@ def delete_string(key):
         flash('字符串删除失败', 'error')
     return redirect(url_for('main.index'))
 
-@main.route('/admin/login', methods=['GET', 'POST'])
-def admin_login():
-    if request.method == 'POST':
-        password = request.form.get('password', '')
-        if auth_manager.login_admin(password):
-            flash('管理员登录成功', 'success')
-            return redirect(url_for('main.index'))
-        else:
-            flash('密码错误', 'error')
-    
-    return render_template('admin_login.html')
-
-@main.route('/admin/logout', methods=['POST'])
-def admin_logout():
-    auth_manager.logout_admin()
-    flash('管理员已登出', 'success')
-    return redirect(url_for('main.index'))
+# 移除 admin_login, admin_logout, admin_auto_logout 路由，因为不再维持登录状态
 
 @main.route('/api/strings', methods=['GET'])
 def api_get_strings():
@@ -98,7 +88,6 @@ def api_get_string(key):
     return jsonify({'success': False, 'error': '字符串不存在'}), 404
 
 @main.route('/api/string', methods=['POST'])
-@auth_manager.require_admin
 def api_add_string():
     data = request.get_json()
     if not data or 'key' not in data or 'value' not in data:
@@ -112,7 +101,6 @@ def api_add_string():
     return jsonify({'success': False, 'error': '添加失败'}), 400
 
 @main.route('/api/string/<key>', methods=['DELETE'])
-@auth_manager.require_admin
 def api_delete_string(key):
     if store.delete_string(key):
         return jsonify({'success': True})
