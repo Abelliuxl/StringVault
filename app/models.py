@@ -98,8 +98,8 @@ class StringStore:
             return True
         return False
     
-    def get_all_strings(self, page: int = 1, per_page: int = None, tag: Optional[str] = None) -> tuple:
-        """获取所有字符串，支持分页和按标签筛选"""
+    def get_all_strings(self, page: int = 1, per_page: int = None, tag: Optional[str] = None, sort_by: str = 'updated_at', sort_order: str = 'desc') -> tuple:
+        """获取所有字符串，支持分页、按标签筛选和排序"""
         if per_page is None:
             per_page = self.ITEMS_PER_PAGE
         
@@ -110,11 +110,21 @@ class StringStore:
         else:
             filtered_items = [{'key': k, **v} for k, v in self._data.items()]
             
-        items = sorted(
-            filtered_items,
-            key=lambda x: x['updated_at'],
-            reverse=True
-        )
+        # 根据排序参数进行排序
+        reverse = sort_order == 'desc'
+        if sort_by == 'created_at':
+            items = sorted(
+                filtered_items,
+                key=lambda x: x['created_at'],
+                reverse=reverse
+            )
+        else:  # 默认按 updated_at 排序
+            items = sorted(
+                filtered_items,
+                key=lambda x: x['updated_at'],
+                reverse=reverse
+            )
+        
         total = len(items)
         start = (page - 1) * per_page
         end = start + per_page

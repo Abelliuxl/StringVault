@@ -50,5 +50,10 @@
   "operation_failed": "Operation failed",
   "tag_required": "Tag cannot be empty",
   "language_switch_success": "Language switched successfully",
-  "language_switch_failed": "Language switch failed"
+  "language_switch_failed": "Language switch failed",
+  "sort_by": "Sort by",
+  "sort_by_created": "Created Time",
+  "sort_by_updated": "Updated Time",
+  "sort_asc": "Ascending",
+  "sort_desc": "Descending"
 }

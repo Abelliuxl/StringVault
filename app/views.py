@@ -13,13 +13,15 @@ def index():
     page = request.args.get('page', 1, type=int)
     search_query = request.args.get('search', '').strip()
     current_tag = request.args.get('tag', '').strip()
+    sort_by = request.args.get('sort_by', 'updated_at').strip()
+    sort_order = request.args.get('sort_order', 'desc').strip()
 
     if search_query:
         items = store.search_strings(search_query)
         total = len(items)
         items = items[(page - 1) * store.ITEMS_PER_PAGE:page * store.ITEMS_PER_PAGE]
     else:
-        items, total = store.get_all_strings(page, tag=current_tag if current_tag else None)
+        items, total = store.get_all_strings(page, tag=current_tag if current_tag else None, sort_by=sort_by, sort_order=sort_order)
 
     total_pages = math.ceil(total / store.ITEMS_PER_PAGE)
     all_tags = store.get_all_tags()
@@ -31,6 +33,8 @@ def index():
                              total_pages=total_pages,
                              search_query=search_query,
                              current_tag=current_tag,
+                             sort_by=sort_by,
+                             sort_order=sort_order,
                              all_tags=all_tags)
 
     # 加载翻译数据
@@ -43,6 +47,8 @@ def index():
                          search_query=search_query,
                          is_admin=auth_manager.is_admin_authenticated(),
                          current_tag=current_tag,
+                         sort_by=sort_by,
+                         sort_order=sort_order,
                          all_tags=all_tags,
                          translations=translations)
 

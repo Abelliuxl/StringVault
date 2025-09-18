@@ -28,6 +28,12 @@ function initializeStaticListeners() {
         tagFilterContainer.addEventListener('click', handleTagFilter);
     }
 
+    // 排序按钮事件委托（新的下拉菜单）
+    const sortSwitch = document.querySelector('.sort-switch');
+    if (sortSwitch) {
+        sortSwitch.addEventListener('click', handleSortOrder);
+    }
+
     // 添加字符串按钮
     const addStringBtn = document.getElementById('addStringBtn');
     const addForm = document.getElementById('add-form');
@@ -182,28 +188,26 @@ function handleAddTag(form) {
     const key = stringItem.dataset.key;
 
     if (tag) {
-        showPasswordVerifyModal(() => {
-            fetch(`/api/strings/${key}/tags`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest'
-                },
-                body: JSON.stringify({ tag: tag })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    showNotification(getTranslation('tag_add_success'), 'success');
-                    location.reload();
-                } else {
-                    showNotification(data.error || getTranslation('operation_failed'), 'error');
-                }
-            })
-            .catch(err => {
-                 console.error('添加标签失败:', err);
-                 showNotification(getTranslation('request_failed'), 'error');
-            });
+        fetch(`/api/strings/${key}/tags`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify({ tag: tag })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showNotification(getTranslation('tag_add_success'), 'success');
+                location.reload();
+            } else {
+                showNotification(data.error || getTranslation('operation_failed'), 'error');
+            }
+        })
+        .catch(err => {
+             console.error('添加标签失败:', err);
+             showNotification(getTranslation('request_failed'), 'error');
         });
     }
 }
@@ -214,24 +218,22 @@ function handleDeleteTag(button) {
     const tag = button.dataset.tag;
 
     if (confirm(getTranslation('delete_tag_confirm').replace('{key}', key).replace('{tag}', tag))) {
-        showPasswordVerifyModal(() => {
-            fetch(`/api/strings/${key}/tags/${tag}`, {
-                method: 'DELETE',
-                headers: { 'X-Requested-With': 'XMLHttpRequest' }
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    showNotification(getTranslation('tag_delete_success'), 'success');
-                    location.reload();
-                } else {
-                    showNotification(data.error || getTranslation('operation_failed'), 'error');
-                }
-            })
-            .catch(err => {
-                console.error('删除标签失败:', err);
-                showNotification(getTranslation('request_failed'), 'error');
-            });
+        fetch(`/api/strings/${key}/tags/${tag}`, {
+            method: 'DELETE',
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showNotification(getTranslation('tag_delete_success'), 'success');
+                location.reload();
+            } else {
+                showNotification(data.error || getTranslation('operation_failed'), 'error');
+            }
+        })
+        .catch(err => {
+            console.error('删除标签失败:', err);
+            showNotification(getTranslation('request_failed'), 'error');
         });
     }
 }
@@ -332,6 +334,64 @@ function handleTagFilter(e) {
         })
         .catch(error => {
             console.error('标签切换失败:', error);
+            showNotification(getTranslation('request_failed'), 'error');
+            
+            // 恢复容器状态
+            if (container) {
+                container.style.opacity = '1';
+                container.style.pointerEvents = 'auto';
+            }
+        });
+}
+
+/**
+ * 排序顺序切换处理函数（新的下拉菜单）
+ */
+function handleSortOrder(e) {
+    const sortOrderBtn = e.target.closest('.sort-order-btn');
+    if (!sortOrderBtn) return;
+    
+    e.preventDefault();
+    
+    // 立即更新UI状态，提供即时反馈
+    const allSortOrderBtns = document.querySelectorAll('.sort-order-btn');
+    allSortOrderBtns.forEach(btn => btn.classList.remove('active'));
+    sortOrderBtn.classList.add('active');
+    
+    // 获取排序参数
+    const sortBy = sortOrderBtn.dataset.sort;
+    const sortOrder = sortOrderBtn.dataset.order;
+    
+    // 构建URL
+    const url = new URL(window.location.href);
+    url.searchParams.set('sort_by', sortBy);
+    url.searchParams.set('sort_order', sortOrder);
+    url.searchParams.set('page', '1');
+    
+    // 显示加载状态
+    const container = document.querySelector('.string-list-container');
+    if (container) {
+        container.style.opacity = '0.6';
+        container.style.pointerEvents = 'none';
+    }
+    
+    // 发起AJAX请求
+    fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+        .then(response => response.text())
+        .then(html => {
+            if (container) {
+                container.innerHTML = html;
+                // 立即恢复容器状态
+                container.style.opacity = '1';
+                container.style.pointerEvents = 'auto';
+                
+                // 快速初始化新内容，优化遮盖效果
+                reinitializeDynamicContent();
+            }
+            window.history.pushState({path: url.href}, '', url.href);
+        })
+        .catch(error => {
+            console.error('排序切换失败:', error);
             showNotification(getTranslation('request_failed'), 'error');
             
             // 恢复容器状态

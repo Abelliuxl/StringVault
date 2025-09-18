@@ -67,19 +67,66 @@
         <div class="header-section">
             <h1>{{ t('header_title') }}</h1>
             
-            <!-- 语言切换按钮 -->
-            <div class="language-switch">
-                <div class="dropdown">
-                    <button class="btn btn-secondary dropdown-toggle" type="button" id="languageDropdown">
-                        🌐 {{ get_language_name(get_current_language()) }}
-                    </button>
-                    <div class="dropdown-menu">
-                        <a href="{{ url_for('main.set_language', language='zh') }}" class="dropdown-item {% if get_current_language() == 'zh' %}active{% endif %}">
-                            {{ t('chinese') }}
-                        </a>
-                        <a href="{{ url_for('main.set_language', language='en') }}" class="dropdown-item {% if get_current_language() == 'en' %}active{% endif %}">
-                            {{ t('english') }}
-                        </a>
+            <div class="header-controls">
+                <!-- 排序下拉菜单 -->
+                <div class="sort-switch">
+                    <div class="dropdown">
+                        <button class="btn btn-secondary dropdown-toggle" type="button" id="sortDropdown">
+                            🔄 {{ t('sort_by') }}: {% if sort_by == 'created_at' %}{{ t('sort_by_created') }}{% else %}{{ t('sort_by_updated') }}{% endif %} {% if sort_order == 'asc' %}{{ t('sort_asc') }}{% else %}{{ t('sort_desc') }}{% endif %}
+                        </button>
+                        <div class="dropdown-menu">
+                            <div class="sort-option">
+                                <span class="sort-field">{{ t('sort_by_updated') }}</span>
+                                <div class="sort-direction">
+                                    <a href="{{ url_for('main.index', search=search_query, tag=current_tag, sort_by='updated_at', sort_order='desc') }}" 
+                                       class="sort-order-btn {% if sort_by == 'updated_at' and (sort_order != 'asc' or not sort_order) %}active{% endif %}"
+                                       data-sort="updated_at"
+                                       data-order="desc">
+                                        {{ t('sort_desc') }}
+                                    </a>
+                                    <a href="{{ url_for('main.index', search=search_query, tag=current_tag, sort_by='updated_at', sort_order='asc') }}" 
+                                       class="sort-order-btn {% if sort_by == 'updated_at' and sort_order == 'asc' %}active{% endif %}"
+                                       data-sort="updated_at"
+                                       data-order="asc">
+                                        {{ t('sort_asc') }}
+                                    </a>
+                                </div>
+                            </div>
+                            <div class="sort-option">
+                                <span class="sort-field">{{ t('sort_by_created') }}</span>
+                                <div class="sort-direction">
+                                    <a href="{{ url_for('main.index', search=search_query, tag=current_tag, sort_by='created_at', sort_order='desc') }}" 
+                                       class="sort-order-btn {% if sort_by == 'created_at' and (sort_order != 'asc' or not sort_order) %}active{% endif %}"
+                                       data-sort="created_at"
+                                       data-order="desc">
+                                        {{ t('sort_desc') }}
+                                    </a>
+                                    <a href="{{ url_for('main.index', search=search_query, tag=current_tag, sort_by='created_at', sort_order='asc') }}" 
+                                       class="sort-order-btn {% if sort_by == 'created_at' and sort_order == 'asc' %}active{% endif %}"
+                                       data-sort="created_at"
+                                       data-order="asc">
+                                        {{ t('sort_asc') }}
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 语言切换按钮 -->
+                <div class="language-switch">
+                    <div class="dropdown">
+                        <button class="btn btn-secondary dropdown-toggle" type="button" id="languageDropdown">
+                            🌐 {{ get_language_name(get_current_language()) }}
+                        </button>
+                        <div class="dropdown-menu">
+                            <a href="{{ url_for('main.set_language', language='zh') }}" class="dropdown-item {% if get_current_language() == 'zh' %}active{% endif %}">
+                                {{ t('chinese') }}
+                            </a>
+                            <a href="{{ url_for('main.set_language', language='en') }}" class="dropdown-item {% if get_current_language() == 'en' %}active{% endif %}">
+                                {{ t('english') }}
+                            </a>
+                        </div>
                     </div>
                 </div>
             </div>

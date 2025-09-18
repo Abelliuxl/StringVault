@@ -50,5 +50,10 @@
   "operation_failed": "操作失败",
   "tag_required": "标签不能为空",
   "language_switch_success": "语言切换成功",
-  "language_switch_failed": "语言切换失败"
+  "language_switch_failed": "语言切换失败",
+  "sort_by": "排序方式",
+  "sort_by_created": "按创建时间",
+  "sort_by_updated": "按更新时间",
+  "sort_asc": "升序",
+  "sort_desc": "降序"
 }

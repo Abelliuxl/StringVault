@@ -5,10 +5,12 @@
         <div class="string-value truncate">{{ item.value }}</div>
         <div class="string-meta">
             {{ t('created_time') }}: {{ item.created_at | datetime }}
-            {% if item.updated_at != item.created_at %}
-            | {{ t('updated_time') }}: {{ item.updated_at | datetime }}
-            {% endif %}
         </div>
+        {% if item.updated_at != item.created_at %}
+        <div class="string-meta updated-time">
+            {{ t('updated_time') }}: {{ item.updated_at | datetime }}
+        </div>
+        {% endif %}
         <div class="string-tags-container">
             <div class="tags-list">
                 {% for tag in item.tags %}

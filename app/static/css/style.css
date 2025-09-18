@@ -290,6 +290,10 @@ h1 {
     flex-wrap: wrap;
 }
 
+.string-meta.updated-time {
+    margin-top: 4px;
+}
+
 .string-meta span {
     display: flex;
     align-items: center;
@@ -585,6 +589,61 @@ h1 {
     }
 }
 
+/* --- 排序按钮样式 --- */
+
+.sort-container {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 2rem;
+    padding: 16px;
+    background-color: var(--bg-color);
+    border-radius: var(--border-radius);
+    border: 1px solid var(--border-color);
+}
+
+.sort-label {
+    font-weight: 600;
+    color: var(--text-color);
+    font-size: 14px;
+    white-space: nowrap;
+}
+
+.sort-buttons {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.sort-btn {
+    display: inline-block;
+    padding: 8px 16px;
+    border-radius: var(--border-radius-sm);
+    background-color: var(--card-bg);
+    color: var(--text-secondary);
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 500;
+    transition: var(--transition);
+    border: 2px solid var(--border-color);
+    cursor: pointer;
+}
+
+.sort-btn:hover {
+    background-color: var(--border-color);
+    color: var(--text-color);
+    transform: translateY(-1px);
+    box-shadow: var(--box-shadow);
+}
+
+.sort-btn.active {
+    background-color: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+    font-weight: 600;
+    box-shadow: var(--box-shadow);
+}
+
 /* --- 标签系统样式 --- */
 
 /* 顶部的标签筛选栏 */
@@ -811,6 +870,64 @@ h1 {
     margin-bottom: 2rem;
     padding-bottom: 1rem;
     border-bottom: 1px solid var(--border-color);
+}
+
+.header-controls {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
+.sort-switch {
+    display: flex;
+    align-items: center;
+}
+
+.sort-option {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.sort-option:last-child {
+    border-bottom: none;
+}
+
+.sort-field {
+    font-weight: 500;
+    color: var(--text-color);
+    min-width: 100px;
+}
+
+.sort-direction {
+    display: flex;
+    gap: 4px;
+}
+
+.sort-order-btn {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: var(--border-radius-sm);
+    background-color: var(--bg-color);
+    color: var(--text-secondary);
+    text-decoration: none;
+    font-size: 12px;
+    font-weight: 500;
+    transition: var(--transition);
+    border: 1px solid var(--border-color);
+}
+
+.sort-order-btn:hover {
+    background-color: var(--border-color);
+    color: var(--text-color);
+}
+
+.sort-order-btn.active {
+    background-color: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
 }
 
 /* 语言切换样式 */
