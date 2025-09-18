@@ -22,6 +22,12 @@ function initializeStaticListeners() {
         searchInput.addEventListener('input', debounce(handleSearch, 300));
     }
 
+    // 优化标签切换 - 使用事件委托
+    const tagFilterContainer = document.querySelector('.tag-filter-container');
+    if (tagFilterContainer) {
+        tagFilterContainer.addEventListener('click', handleTagFilter);
+    }
+
     // 添加字符串按钮
     const addStringBtn = document.getElementById('addStringBtn');
     const addForm = document.getElementById('add-form');
@@ -78,24 +84,34 @@ function setupDelegatedListeners(container) {
  */
 function reinitializeDynamicContent() {
     const stringItems = document.querySelectorAll('.string-item');
-    stringItems.forEach((item, index) => {
-        // 1. 应用加载动画
-        item.style.opacity = '0';
-        item.style.transform = 'translateY(20px)';
-        setTimeout(() => {
-            item.style.transition = 'all 0.5s ease';
-            item.style.opacity = '1';
-            item.style.transform = 'translateY(0)';
-        }, index * 50); // 加快动画
+    
+    // 使用requestAnimationFrame优化性能
+    requestAnimationFrame(() => {
+        stringItems.forEach((item, index) => {
+            // 1. 优化加载动画 - 减少延迟和动画时间
+            item.style.opacity = '0';
+            item.style.transform = 'translateY(10px)';
+            
+            // 使用更短的延迟和动画时间
+            setTimeout(() => {
+                item.style.transition = 'all 0.3s ease';
+                item.style.opacity = '1';
+                item.style.transform = 'translateY(0)';
+            }, index * 20); // 减少延迟时间
 
-        // 2. 初始化预览状态和磨砂效果
-        const valueElement = item.querySelector('.string-value');
-        const previewButton = item.querySelector('.preview-btn');
-        if (valueElement && previewButton) {
-            valueElement.classList.add('truncate', 'frosted-glass', 'frosted-glass-active');
-            previewButton.innerHTML = '<span>👁️</span>' + getTranslation('expand_btn');
-            previewButton.setAttribute('title', getTranslation('expand_btn'));
-        }
+            // 2. 初始化预览状态和磨砂效果 - 使用同步操作避免延迟
+            const valueElement = item.querySelector('.string-value');
+            const previewButton = item.querySelector('.preview-btn');
+            if (valueElement && previewButton) {
+                // 立即应用类，不使用延迟
+                valueElement.classList.add('truncate', 'frosted-glass', 'frosted-glass-active');
+                previewButton.innerHTML = '<span>👁️</span>' + getTranslation('expand_btn');
+                previewButton.setAttribute('title', getTranslation('expand_btn'));
+                
+                // 强制重绘以确保遮盖效果立即生效
+                valueElement.offsetHeight;
+            }
+        });
     });
 }
 
@@ -232,17 +248,98 @@ function handleSearch(e) {
     url.searchParams.set('search', query);
     url.searchParams.set('page', '1');
 
+    // 显示加载状态
+    const container = document.querySelector('.string-list-container');
+    if (container) {
+        container.style.opacity = '0.6';
+        container.style.pointerEvents = 'none';
+    }
+
     fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
     .then(response => response.text())
     .then(html => {
-        const container = document.querySelector('.string-list-container');
         if (container) {
             container.innerHTML = html;
-            reinitializeDynamicContent(); // 重新初始化新加载的内容
+            // 立即恢复容器状态
+            container.style.opacity = '1';
+            container.style.pointerEvents = 'auto';
+            
+            // 快速初始化新内容，优化遮盖效果
+            reinitializeDynamicContent();
         }
         window.history.pushState({path: url.href}, '', url.href);
     })
-    .catch(error => console.error('搜索失败:', error));
+    .catch(error => {
+        console.error('搜索失败:', error);
+        showNotification(getTranslation('request_failed'), 'error');
+        
+        // 恢复容器状态
+        if (container) {
+            container.style.opacity = '1';
+            container.style.pointerEvents = 'auto';
+        }
+    });
+}
+
+/**
+ * 优化的标签切换处理函数
+ */
+function handleTagFilter(e) {
+    const tagLink = e.target.closest('.tag-item');
+    if (!tagLink) return;
+    
+    e.preventDefault();
+    
+    // 立即更新UI状态，提供即时反馈
+    const allTagItems = document.querySelectorAll('.tag-filter-container .tag-item');
+    allTagItems.forEach(item => item.classList.remove('active'));
+    tagLink.classList.add('active');
+    
+    // 获取标签参数
+    const tag = tagLink.textContent.trim();
+    const isAllTag = tag === getTranslation('all_tags');
+    
+    // 构建URL
+    const url = new URL(window.location.href);
+    if (isAllTag) {
+        url.searchParams.delete('tag');
+    } else {
+        url.searchParams.set('tag', tag);
+    }
+    url.searchParams.set('page', '1');
+    
+    // 显示加载状态
+    const container = document.querySelector('.string-list-container');
+    if (container) {
+        container.style.opacity = '0.6';
+        container.style.pointerEvents = 'none';
+    }
+    
+    // 发起AJAX请求
+    fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+        .then(response => response.text())
+        .then(html => {
+            if (container) {
+                container.innerHTML = html;
+                // 立即恢复容器状态
+                container.style.opacity = '1';
+                container.style.pointerEvents = 'auto';
+                
+                // 快速初始化新内容，优化遮盖效果
+                reinitializeDynamicContent();
+            }
+            window.history.pushState({path: url.href}, '', url.href);
+        })
+        .catch(error => {
+            console.error('标签切换失败:', error);
+            showNotification(getTranslation('request_failed'), 'error');
+            
+            // 恢复容器状态
+            if (container) {
+                container.style.opacity = '1';
+                container.style.pointerEvents = 'auto';
+            }
+        });
 }
 
 function handlePasswordVerification(e) {

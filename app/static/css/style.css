@@ -254,11 +254,12 @@ h1 {
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(255, 255, 255, 0.1); /* 半透明背景 */
-    backdrop-filter: blur(8px); /* 磨砂玻璃效果 */
-    -webkit-backdrop-filter: blur(8px); /* Safari兼容 */
+    background-color: rgba(255, 255, 255, 0.15); /* 稍微增加不透明度 */
+    backdrop-filter: blur(4px); /* 减少模糊程度以提高性能 */
+    -webkit-backdrop-filter: blur(4px); /* Safari兼容 */
     z-index: 1; /* 确保在文本上方 */
-    transition: opacity 0.3s ease;
+    transition: opacity 0.15s ease; /* 减少过渡时间 */
+    will-change: opacity; /* 优化GPU加速 */
 }
 
 .string-value.frosted-glass.frosted-glass-active::before {
