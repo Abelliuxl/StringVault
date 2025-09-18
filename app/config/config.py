@@ -24,7 +24,7 @@ class Config:
     # 应用配置
     MAX_STRING_LENGTH = 10000  # 最大字符串长度
     MAX_KEY_LENGTH = 100      # 最大键名长度
-    ITEMS_PER_PAGE = 10       # 每页显示的项目数
+    ITEMS_PER_PAGE = 12       # 每页显示的项目数
     
 class DevelopmentConfig(Config):
     DEBUG = True
