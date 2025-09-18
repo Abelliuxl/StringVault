@@ -29,6 +29,12 @@ function initializeStaticListeners() {
         addStringBtn.addEventListener('click', handleAddString);
     }
     
+    // 收起/展开添加字符串表单按钮
+    const toggleAddFormBtn = document.getElementById('toggleAddFormBtn');
+    if (toggleAddFormBtn) {
+        toggleAddFormBtn.addEventListener('click', toggleAddForm);
+    }
+    
     // 密码验证模态框
     const passwordVerifyForm = document.getElementById('passwordVerifyForm');
     if (passwordVerifyForm) {
@@ -87,28 +93,62 @@ function reinitializeDynamicContent() {
         const previewButton = item.querySelector('.preview-btn');
         if (valueElement && previewButton) {
             valueElement.classList.add('truncate', 'frosted-glass', 'frosted-glass-active');
-            previewButton.innerHTML = '<span>👁️</span>展开';
-            previewButton.setAttribute('title', '展开完整内容');
+            previewButton.innerHTML = '<span>👁️</span>' + getTranslation('expand_btn');
+            previewButton.setAttribute('title', getTranslation('expand_btn'));
         }
     });
 }
 
 // --- 事件处理器 ---
 
+function toggleAddForm() {
+    const addForm = document.getElementById('add-form');
+    const toggleBtnText = document.getElementById('toggleBtnText');
+    
+    if (addForm.classList.contains('collapsed')) {
+        // 展开表单
+        addForm.classList.remove('collapsed');
+        addForm.classList.add('expanded');
+        toggleBtnText.textContent = getTranslation('collapse_form');
+        
+        // 聚焦到第一个输入框
+        setTimeout(() => {
+            const firstInput = addForm.querySelector('input[name="key"]');
+            if (firstInput) {
+                firstInput.focus();
+            }
+        }, 300);
+    } else {
+        // 收起表单
+        addForm.classList.remove('expanded');
+        addForm.classList.add('collapsed');
+        toggleBtnText.textContent = getTranslation('add_string');
+        
+        // 清空表单
+        addForm.reset();
+    }
+}
+
 function handleAddString() {
     const addForm = document.getElementById('add-form');
     const keyInput = addForm.querySelector('input[name="key"]');
     const valueInput = addForm.querySelector('input[name="value"]');
     if (!validateInput(keyInput, 100) || !validateInput(valueInput, 10000)) {
-        showNotification('键和值都不能为空，且需在长度限制内。', 'error');
+        showNotification(getTranslation('input_required'), 'error');
         return;
     }
-    showPasswordVerifyModal(() => addForm.submit());
+    showPasswordVerifyModal(() => {
+        addForm.submit();
+        // 添加成功后收起表单
+        setTimeout(() => {
+            toggleAddForm();
+        }, 1000);
+    });
 }
 
 function handleDeleteString(button) {
     const keyToDelete = button.dataset.key;
-    if (confirm('确定要删除这个字符串吗？')) {
+    if (confirm(getTranslation('delete_string_confirm'))) {
         showPasswordVerifyModal(function() {
             const form = document.createElement('form');
             form.method = 'POST';
@@ -138,15 +178,15 @@ function handleAddTag(form) {
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    showNotification('标签添加成功', 'success');
+                    showNotification(getTranslation('tag_add_success'), 'success');
                     location.reload();
                 } else {
-                    showNotification(data.error || '添加失败', 'error');
+                    showNotification(data.error || getTranslation('operation_failed'), 'error');
                 }
             })
             .catch(err => {
                  console.error('添加标签失败:', err);
-                 showNotification('请求失败', 'error');
+                 showNotification(getTranslation('request_failed'), 'error');
             });
         });
     }
@@ -157,7 +197,7 @@ function handleDeleteTag(button) {
     const key = stringItem.dataset.key;
     const tag = button.dataset.tag;
 
-    if (confirm(`确定要从 "${key}" 中删除标签 "${tag}" 吗？`)) {
+    if (confirm(getTranslation('delete_tag_confirm').replace('{key}', key).replace('{tag}', tag))) {
         showPasswordVerifyModal(() => {
             fetch(`/api/strings/${key}/tags/${tag}`, {
                 method: 'DELETE',
@@ -166,15 +206,15 @@ function handleDeleteTag(button) {
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    showNotification('标签删除成功', 'success');
+                    showNotification(getTranslation('tag_delete_success'), 'success');
                     location.reload();
                 } else {
-                    showNotification(data.error || '删除失败', 'error');
+                    showNotification(data.error || getTranslation('operation_failed'), 'error');
                 }
             })
             .catch(err => {
                 console.error('删除标签失败:', err);
-                showNotification('请求失败', 'error');
+                showNotification(getTranslation('request_failed'), 'error');
             });
         });
     }
@@ -211,13 +251,13 @@ function handlePasswordVerification(e) {
     const passwordInput = form.querySelector('input[name="password"]');
     const password = passwordInput.value.trim();
     if (!password) {
-        showNotification('请输入管理员密码', 'error');
+        showNotification(getTranslation('password_required'), 'error');
         return;
     }
     
     const submitBtn = form.querySelector('.login-btn');
     const originalText = submitBtn.textContent;
-    submitBtn.textContent = '验证中...';
+    submitBtn.textContent = getTranslation('verifying');
     submitBtn.disabled = true;
 
     fetch('/api/verify_password', {
@@ -228,7 +268,7 @@ function handlePasswordVerification(e) {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            showNotification('密码验证成功！', 'success');
+            showNotification(getTranslation('password_success'), 'success');
             // 关键修复：先执行回调，再关闭模态框
             const callbackToExecute = currentVerifyCallback;
             closePasswordVerifyModal(); // closePasswordVerifyModal 会将 currentVerifyCallback 设为 null
@@ -236,12 +276,12 @@ function handlePasswordVerification(e) {
                 callbackToExecute();
             }
         } else {
-            showNotification(data.error || '密码错误', 'error');
+            showNotification(data.error || getTranslation('password_error'), 'error');
         }
     })
     .catch(error => {
         console.error('密码验证请求失败:', error);
-        showNotification('密码验证请求失败', 'error');
+        showNotification(getTranslation('password_request_failed'), 'error');
     })
     .finally(() => {
         submitBtn.textContent = originalText;
@@ -259,11 +299,11 @@ function togglePreview(button) {
     valueElement.classList.toggle('frosted-glass-active', isTruncated);
     
     if (isTruncated) {
-        button.innerHTML = '<span>👁️</span>展开';
-        button.setAttribute('title', '展开完整内容');
+        button.innerHTML = '<span>👁️</span>' + getTranslation('expand_btn');
+        button.setAttribute('title', getTranslation('expand_btn'));
     } else {
-        button.innerHTML = '<span>👁️‍🗨️</span>收起';
-        button.setAttribute('title', '收起完整内容');
+        button.innerHTML = '<span>👁️‍🗨️</span>' + getTranslation('collapse_btn');
+        button.setAttribute('title', getTranslation('collapse_btn'));
     }
 }
 
@@ -274,7 +314,7 @@ async function copyToClipboard(text, button) {
     if (navigator.clipboard && window.isSecureContext) {
         try {
             await navigator.clipboard.writeText(text);
-            showNotification('📋 复制成功！', 'success');
+            showNotification(getTranslation('copy_success'), 'success');
         } catch (err) {
             fallbackCopyTextToClipboard(text);
         }
@@ -293,9 +333,9 @@ function fallbackCopyTextToClipboard(text) {
     textArea.select();
     try {
         document.execCommand('copy');
-        showNotification('📋 复制成功！', 'success');
+        showNotification(getTranslation('copy_success'), 'success');
     } catch (err) {
-        showNotification('❌ 复制失败', 'error');
+        showNotification(getTranslation('copy_failed'), 'error');
     }
     document.body.removeChild(textArea);
 }
@@ -350,7 +390,7 @@ function closePasswordVerifyModal() {
         if (form) form.reset();
         const submitBtn = modal.querySelector('.login-btn');
         if (submitBtn) {
-            submitBtn.textContent = '验证';
+            submitBtn.textContent = getTranslation('verify_btn');
             submitBtn.disabled = false;
         }
     }

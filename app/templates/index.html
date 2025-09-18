@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="zh">
+<html lang="{{ get_current_language() }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>字符串托管系统</title>
+    <title>{{ t('app_title') }}</title>
     
     <!-- Favicon 图标 - 使用您提供的图标文件 -->
     <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='images/favicon.ico') }}">
@@ -27,20 +27,20 @@
         <div class="login-modal">
             <button class="close-modal" onclick="closePasswordVerifyModal()">&times;</button>
             <div class="modal-header">
-                <h2>🔐 权限验证</h2>
-                <p>请输入管理员密码以执行此操作</p>
+                <h2>{{ t('password_verify_title') }}</h2>
+                <p>{{ t('password_verify_desc') }}</p>
             </div>
             <form id="passwordVerifyForm" class="login-form">
                 <div class="form-group">
                     <input type="password" 
                            name="password" 
                            class="form-control" 
-                           placeholder="管理员密码"
+                           placeholder="{{ t('password_placeholder') }}"
                            required
                            autofocus>
                 </div>
                 <button type="submit" class="login-btn">
-                    验证
+                    {{ t('verify_btn') }}
                 </button>
             </form>
         </div>
@@ -65,9 +65,24 @@
     
     <div class="container">
         <div class="header-section">
-            <h1>字符串托管系统</h1>
+            <h1>{{ t('header_title') }}</h1>
             
-            <!-- 移除管理员登录/登出按钮 -->
+            <!-- 语言切换按钮 -->
+            <div class="language-switch">
+                <div class="dropdown">
+                    <button class="btn btn-secondary dropdown-toggle" type="button" id="languageDropdown">
+                        🌐 {{ get_language_name(get_current_language()) }}
+                    </button>
+                    <div class="dropdown-menu">
+                        <a href="{{ url_for('main.set_language', language='zh') }}" class="dropdown-item {% if get_current_language() == 'zh' %}active{% endif %}">
+                            {{ t('chinese') }}
+                        </a>
+                        <a href="{{ url_for('main.set_language', language='en') }}" class="dropdown-item {% if get_current_language() == 'en' %}active{% endif %}">
+                            {{ t('english') }}
+                        </a>
+                    </div>
+                </div>
+            </div>
         </div>
         
         <!-- 搜索框 -->
@@ -78,51 +93,60 @@
                            id="search-input"
                            name="search" 
                            class="form-control"
-                           placeholder="搜索字符串..."
-                           value="{{ search_query }}">
+                    placeholder="{{ t('search_placeholder') }}"
+                   value="{{ search_query }}">
                 </div>
             </form>
         </div>
 
         <!-- 标签筛选 -->
         <div class="tag-filter-container">
-            <a href="{{ url_for('main.index') }}" class="tag-item {% if not current_tag %}active{% endif %}">全部</a>
+            <a href="{{ url_for('main.index') }}" class="tag-item {% if not current_tag %}active{% endif %}">{{ t('all_tags') }}</a>
             {% for tag in all_tags %}
                 <a href="{{ url_for('main.index', tag=tag) }}" class="tag-item {% if tag == current_tag %}active{% endif %}">{{ tag }}</a>
             {% endfor %}
         </div>
         
         <!-- 添加字符串表单 -->
-        <form id="add-form" class="add-form" method="post" action="{{ url_for('main.add_string') }}">
-            <h3>✨ 添加新字符串</h3>
-            <div class="form-group">
-                <input type="text" 
-                       name="key" 
-                       class="form-control" 
-                       placeholder="输入键名"
-                       maxlength="100"
-                       required>
+        <div class="add-form-container">
+            <div class="add-form-toggle" id="addFormToggle">
+                <button class="btn btn-secondary" id="toggleAddFormBtn">
+                    <span>➕</span>
+                    <span id="toggleBtnText">{{ t('add_string') }}</span>
+                </button>
             </div>
-            <div class="form-group">
-                <input type="text" 
-                       name="value" 
-                       class="form-control" 
-                       placeholder="输入字符串值"
-                       maxlength="10000"
-                       required>
-            </div>
-            <div class="form-group">
-                <input type="text" 
-                       name="tags" 
-                       class="form-control" 
-                       placeholder="添加标签 (用逗号分隔)..."
-                       list="all-tags-list">
-            </div>
-            <button type="button" class="btn btn-primary" id="addStringBtn">
-                <span>➕</span>
-                添加字符串
-            </button>
-        </form>
+            
+            <form id="add-form" class="add-form collapsed" method="post" action="{{ url_for('main.add_string') }}">
+                <h3>{{ t('add_new_string') }}</h3>
+                <div class="form-group">
+                    <input type="text" 
+                           name="key" 
+                           class="form-control" 
+                           placeholder="{{ t('key_placeholder') }}"
+                           maxlength="100"
+                           required>
+                </div>
+                <div class="form-group">
+                    <input type="text" 
+                           name="value" 
+                           class="form-control" 
+                           placeholder="{{ t('value_placeholder') }}"
+                           maxlength="10000"
+                           required>
+                </div>
+                <div class="form-group">
+                    <input type="text" 
+                           name="tags" 
+                           class="form-control" 
+                           placeholder="{{ t('tags_placeholder') }}"
+                           list="all-tags-list">
+                </div>
+                <button type="button" class="btn btn-primary" id="addStringBtn">
+                    <span>➕</span>
+                    {{ t('add_string_btn') }}
+                </button>
+            </form>
+        </div>
         
         <!-- 字符串列表 -->
         <div class="string-list-container">
@@ -130,6 +154,12 @@
         </div>
     </div>
     
+    <!-- 翻译数据 -->
+    <script id="translations-data" type="application/json">
+    {{ translations|tojson|safe }}
+    </script>
+    
+    <script src="{{ url_for('static', filename='js/i18n.js') }}"></script>
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
 </body>
 </html>

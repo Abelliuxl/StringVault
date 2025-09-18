@@ -4,9 +4,9 @@
         <div class="string-key">{{ item.key }}</div>
         <div class="string-value truncate">{{ item.value }}</div>
         <div class="string-meta">
-            创建时间: {{ item.created_at | datetime }}
+            {{ t('created_time') }}: {{ item.created_at | datetime }}
             {% if item.updated_at != item.created_at %}
-            | 更新时间: {{ item.updated_at | datetime }}
+            | {{ t('updated_time') }}: {{ item.updated_at | datetime }}
             {% endif %}
         </div>
         <div class="string-tags-container">
@@ -19,28 +19,28 @@
                 {% endfor %}
             </div>
             <form class="add-tag-form">
-                <input type="text" class="add-tag-input" placeholder="添加标签..." list="all-tags-list">
-                <button type="submit" class="btn-add-tag">添加</button>
+                <input type="text" class="add-tag-input" placeholder="{{ t('add_tag') }}..." list="all-tags-list">
+                <button type="submit" class="btn-add-tag">{{ t('add_tag') }}</button>
             </form>
         </div>
     </div>
     <div class="actions">
-        <button class="btn copy-btn" title="复制到剪贴板">
+        <button class="btn copy-btn" title="{{ t('copy_btn') }}">
             <span>📋</span>
-            复制
+            {{ t('copy_btn') }}
         </button>
-        <button class="btn preview-btn" type="button" title="展开/收起完整内容">
+        <button class="btn preview-btn" type="button" title="{{ t('expand_btn') }}/{{ t('collapse_btn') }}">
             <span>👁️</span>
-            展开
+            {{ t('expand_btn') }}
         </button>
         <button type="button" class="btn btn-danger delete-btn" data-key="{{ item.key }}">
             <span>🗑️</span>
-            删除
+            {{ t('delete_btn') }}
         </button>
     </div>
 </div>
 {% else %}
-<p class="no-items">暂无字符串</p>
+<p class="no-items">{{ t('no_items') }}</p>
 {% endfor %}
 
 {% if total_pages > 1 %}

@@ -1,4 +1,4 @@
-# 🔐 StringVault - Secure String Storage System | 安全字符串托管系统
+# 🔐 StringVault - Secure String Storage System | 字符串保险库
 
 ![Python](https://img.shields.io/badge/Python-3.7+-blue.svg)
 ![Flask](https://img.shields.io/badge/Flask-2.0+-green.svg)

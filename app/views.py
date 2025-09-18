@@ -1,6 +1,8 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, session
 from app.models import StringStore
 from app.auth import auth_manager
+from app.utils.i18n import i18n
+import json
 import math
 
 main = Blueprint('main', __name__)
@@ -31,6 +33,9 @@ def index():
                              current_tag=current_tag,
                              all_tags=all_tags)
 
+    # 加载翻译数据
+    translations = i18n.translations
+    
     return render_template('index.html',
                          items=items,
                          page=page,
@@ -38,7 +43,8 @@ def index():
                          search_query=search_query,
                          is_admin=auth_manager.is_admin_authenticated(),
                          current_tag=current_tag,
-                         all_tags=all_tags)
+                         all_tags=all_tags,
+                         translations=translations)
 
 @main.route('/api/verify_password', methods=['POST'])
 def api_verify_password():
@@ -137,5 +143,16 @@ def add_tag(key):
 @main.route('/api/strings/<string:key>/tags/<string:tag>', methods=['DELETE'])
 def delete_tag(key, tag):
     if store.delete_tag(key, tag):
-        return jsonify({'success': True, 'message': '标签删除成功'})
-    return jsonify({'success': False, 'error': '删除失败或标签不存在'}), 404
+        return jsonify({'success': True, 'message': i18n.translate('tag_delete_success')})
+    return jsonify({'success': False, 'error': i18n.translate('tag_delete_failed')}), 404
+
+@main.route('/set_language/<language>')
+def set_language(language):
+    """设置语言"""
+    if i18n.set_language(language):
+        flash(i18n.translate('language_switch_success'), 'success')
+    else:
+        flash(i18n.translate('language_switch_failed'), 'error')
+    
+    # 返回到之前的页面
+    return redirect(request.referrer or url_for('main.index'))
