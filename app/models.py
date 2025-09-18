@@ -1,7 +1,7 @@
 import json
 import os
 from datetime import datetime
-from typing import Dict, Optional, List
+from typing import Dict, Optional, List, Set
 import logging
 from app.config.config import Config
 
@@ -22,9 +22,13 @@ class StringStore:
                     data = json.load(f)
                     # 转换旧数据格式
                     if not all(isinstance(v, dict) for v in data.values()):
-                        return {k: {'value': v, 'created_at': datetime.now().isoformat(), 
+                        data = {k: {'value': v, 'created_at': datetime.now().isoformat(), 
                                   'updated_at': datetime.now().isoformat()} 
                                 for k, v in data.items()}
+                    # 为没有标签的数据添加 'tags' 字段
+                    for k, v in data.items():
+                        if 'tags' not in v:
+                            v['tags'] = []
                     return data
             except json.JSONDecodeError:
                 logging.error("数据文件损坏，创建备份并返回空数据")
@@ -54,22 +58,30 @@ class StringStore:
             except Exception as e:
                 logging.error(f"备份失败: {str(e)}")
     
-    def add_string(self, key: str, value: str) -> bool:
-        """添加或更新字符串"""
+    def add_string(self, key: str, value: str, tags: Optional[List[str]] = None) -> bool:
+        """添加或更新字符串，支持在创建时添加标签"""
         if not self._validate_key(key) or not self._validate_value(value):
             return False
             
         now = datetime.now().isoformat()
         if key in self._data:
+            # 更新现有字符串时，不处理标签，标签操作由 add_tag/delete_tag 负责
             self._data[key].update({
                 'value': value,
                 'updated_at': now
             })
         else:
+            # 创建新字符串
+            new_tags = []
+            if tags:
+                # 清理、去重并排序
+                new_tags = sorted(list(set([tag.strip() for tag in tags if tag.strip()])))
+
             self._data[key] = {
                 'value': value,
                 'created_at': now,
-                'updated_at': now
+                'updated_at': now,
+                'tags': new_tags
             }
         self._save_data()
         return True
@@ -86,13 +98,20 @@ class StringStore:
             return True
         return False
     
-    def get_all_strings(self, page: int = 1, per_page: int = None) -> tuple:
-        """获取所有字符串，支持分页"""
+    def get_all_strings(self, page: int = 1, per_page: int = None, tag: Optional[str] = None) -> tuple:
+        """获取所有字符串，支持分页和按标签筛选"""
         if per_page is None:
             per_page = self.ITEMS_PER_PAGE
+        
+        if tag:
+            filtered_items = [
+                {'key': k, **v} for k, v in self._data.items() if tag in v.get('tags', [])
+            ]
+        else:
+            filtered_items = [{'key': k, **v} for k, v in self._data.items()]
             
         items = sorted(
-            [{'key': k, **v} for k, v in self._data.items()],
+            filtered_items,
             key=lambda x: x['updated_at'],
             reverse=True
         )
@@ -102,14 +121,47 @@ class StringStore:
         return items[start:end], total
     
     def search_strings(self, query: str) -> List[dict]:
-        """搜索字符串"""
+        """搜索字符串，包括在标签中搜索"""
         query = query.lower()
         return [
             {'key': k, **v} 
             for k, v in self._data.items() 
-            if query in k.lower() or query in v['value'].lower()
+            if query in k.lower() or \
+               query in v['value'].lower() or \
+               any(query in tag.lower() for tag in v.get('tags', []))
         ]
     
+    def add_tag(self, key: str, tag: str) -> bool:
+        """为指定字符串添加标签"""
+        if key in self._data and tag and tag.strip():
+            tags = self._data[key].get('tags', [])
+            if tag not in tags:
+                tags.append(tag)
+                self._data[key]['tags'] = sorted(tags)
+                self._data[key]['updated_at'] = datetime.now().isoformat()
+                self._save_data()
+                return True
+        return False
+
+    def delete_tag(self, key: str, tag: str) -> bool:
+        """删除指定字符串的标签"""
+        if key in self._data and tag:
+            tags = self._data[key].get('tags', [])
+            if tag in tags:
+                tags.remove(tag)
+                self._data[key]['tags'] = sorted(tags)
+                self._data[key]['updated_at'] = datetime.now().isoformat()
+                self._save_data()
+                return True
+        return False
+
+    def get_all_tags(self) -> List[str]:
+        """获取所有唯一的标签"""
+        all_tags: Set[str] = set()
+        for item in self._data.values():
+            all_tags.update(item.get('tags', []))
+        return sorted(list(all_tags))
+
     def _validate_key(self, key: str) -> bool:
         """验证键名"""
         return (isinstance(key, str) and 
@@ -119,4 +171,4 @@ class StringStore:
     def _validate_value(self, value: str) -> bool:
         """验证值"""
         return (isinstance(value, str) and 
-                0 < len(value) <= Config.MAX_STRING_LENGTH) 
+                0 < len(value) <= Config.MAX_STRING_LENGTH)

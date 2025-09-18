@@ -1,5 +1,5 @@
 {% for item in items %}
-<div class="string-item">
+<div class="string-item" data-key="{{ item.key }}">
     <div class="string-content">
         <div class="string-key">{{ item.key }}</div>
         <div class="string-value truncate">{{ item.value }}</div>
@@ -8,6 +8,20 @@
             {% if item.updated_at != item.created_at %}
             | 更新时间: {{ item.updated_at | datetime }}
             {% endif %}
+        </div>
+        <div class="string-tags-container">
+            <div class="tags-list">
+                {% for tag in item.tags %}
+                    <span class="tag-item">
+                        {{ tag }}
+                        <button class="delete-tag-btn" data-tag="{{ tag }}" title="删除标签">&times;</button>
+                    </span>
+                {% endfor %}
+            </div>
+            <form class="add-tag-form">
+                <input type="text" class="add-tag-input" placeholder="添加标签..." list="all-tags-list">
+                <button type="submit" class="btn-add-tag">添加</button>
+            </form>
         </div>
     </div>
     <div class="actions">
@@ -32,7 +46,7 @@
 {% if total_pages > 1 %}
 <div class="pagination">
     {% for p in range(1, total_pages + 1) %}
-        <a href="{{ url_for('main.index', page=p, search=search_query) }}"
+        <a href="{{ url_for('main.index', page=p, search=search_query, tag=current_tag) }}"
            class="{{ 'active' if p == page else '' }}">
             {{ p }}
         </a>

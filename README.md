@@ -19,7 +19,9 @@
 
 ### 📊 Data Management | 数据管理
 - **String Storage | 字符串存储** - Secure key-value pair storage system | 安全的键值对存储系统
-- **Search Functionality | 搜索功能** - Quick search for stored strings | 快速搜索存储的字符串
+- **Tag System | 标签系统** - Organize strings with customizable tags for better categorization | 使用自定义标签组织字符串，便于分类管理
+- **Tag Filtering | 标签筛选** - Filter strings by tags for focused browsing | 按标签筛选字符串，便于专注浏览
+- **Search Functionality | 搜索功能** - Quick search for stored strings and tags | 快速搜索存储的字符串和标签
 - **Pagination Display | 分页显示** - Elegant data pagination display | 优雅的数据分页展示
 - **One-click Copy | 一键复制** - Convenient string copy functionality | 便捷的字符串复制功能
 
@@ -55,11 +57,13 @@ python run.py
 ### Admin Operations | 管理员操作
 1. **Add Data | 添加数据** - Click the "Add New String" button, then enter admin password in the pop-up window to confirm | 点击"添加新字符串"按钮，然后在弹窗中输入管理员密码确认
 2. **Delete Data | 删除数据** - Click the delete button on the right side of the string, confirm deletion, then enter admin password in the pop-up window to confirm | 点击字符串右侧的删除按钮，确认删除，然后在弹窗中输入管理员密码确认
+3. **Manage Tags | 管理标签** - Add or remove tags for strings using the tag management interface | 使用标签管理界面为字符串添加或删除标签
 
 ### Regular Users | 普通用户
 1. **Browse Data | 浏览数据** - View all stored strings | 查看所有存储的字符串
-2. **Search Content | 搜索内容** - Use the search box to quickly locate items | 使用搜索框快速定位
-3. **Copy Data | 复制数据** - Click the copy button to get content | 点击复制按钮获取内容
+2. **Filter by Tags | 按标签筛选** - Click on tag filters to view strings with specific tags | 点击标签筛选器查看特定标签的字符串
+3. **Search Content | 搜索内容** - Use the search box to quickly locate items by content or tags | 使用搜索框快速定位内容或标签
+4. **Copy Data | 复制数据** - Click the copy button to get content | 点击复制按钮获取内容
 
 ## 🔧 Admin Tools | 管理员工具
 
