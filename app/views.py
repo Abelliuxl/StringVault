@@ -20,6 +20,13 @@ def index():
     
     total_pages = math.ceil(total / store.ITEMS_PER_PAGE)
     
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return render_template('_string_list.html',
+                             items=items,
+                             page=page,
+                             total_pages=total_pages,
+                             search_query=search_query)
+
     return render_template('index.html',
                          items=items,
                          page=page,

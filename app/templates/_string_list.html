@@ -1,0 +1,41 @@
+{% for item in items %}
+<div class="string-item">
+    <div class="string-content">
+        <div class="string-key">{{ item.key }}</div>
+        <div class="string-value truncate">{{ item.value }}</div>
+        <div class="string-meta">
+            创建时间: {{ item.created_at | datetime }}
+            {% if item.updated_at != item.created_at %}
+            | 更新时间: {{ item.updated_at | datetime }}
+            {% endif %}
+        </div>
+    </div>
+    <div class="actions">
+        <button class="btn copy-btn" title="复制到剪贴板">
+            <span>📋</span>
+            复制
+        </button>
+        <button class="btn preview-btn" type="button" title="展开/收起完整内容">
+            <span>👁️</span>
+            展开
+        </button>
+        <button type="button" class="btn btn-danger delete-btn" data-key="{{ item.key }}">
+            <span>🗑️</span>
+            删除
+        </button>
+    </div>
+</div>
+{% else %}
+<p class="no-items">暂无字符串</p>
+{% endfor %}
+
+{% if total_pages > 1 %}
+<div class="pagination">
+    {% for p in range(1, total_pages + 1) %}
+        <a href="{{ url_for('main.index', page=p, search=search_query) }}"
+           class="{{ 'active' if p == page else '' }}">
+            {{ p }}
+        </a>
+    {% endfor %}
+</div>
+{% endif %}
